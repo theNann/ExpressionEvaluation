@@ -1,0 +1,92 @@
+import java.util.*;
+
+public class Main {
+    public int idx = 0;
+    public String str;
+
+    public int getNum() {
+        int num = 0;
+        while(idx < str.length()){
+            if(str.charAt(idx) >= '0' && str.charAt(idx) <= '9') {
+                num = num * 10 + (str.charAt(idx)-'0');
+                idx += 1;
+            } else {
+                break;
+            }
+        }
+        return num;
+    }
+    public int getOpsFlag(Character ch) { //确定操作符优先级
+        if(ch == '+' || ch == '-') {
+            return 1;
+        } else if(ch == '*' || ch == '/') {
+            return 2;
+        }
+        return -1;
+    }
+    public int getRes(int num1, int num2, Character op) {
+        if(op == '+') {
+            return num1 + num2;
+        } else if(op == '-') {
+            return num1-num2;
+        } else if(op == '*') {
+            return num1 * num2;
+        } else if(op == '/') {
+            return num1 / num2;
+        }
+        return -1;
+    }
+    public int cal() {
+        Stack<Integer> stackNum = new Stack<>();
+        Stack<Character> stackCh = new Stack<>();
+        while(idx < str.length()) {
+            if(str.charAt(idx) >= '0' && str.charAt(idx) <= '9') {
+                int num = getNum();
+                System.out.println("num: " + num);
+                stackNum.push(num);
+            } else {
+                Character op = str.charAt(idx++);
+                if(stackCh.isEmpty() || op == '(') { //当操作符栈为空或该操作符为 ( 时直接入栈
+                    stackCh.push(op);
+                } else if(op == '+' || op == '*' || op == '-' || op == '/') { //当操作符是 + - * / 时
+                    if(getOpsFlag(op) >= getOpsFlag(stackCh.peek())) { //若该操作符大于等于栈顶操作符，直接入栈
+                        stackCh.push(op);
+                    } else{ //若该操作符小于栈顶操作符，一直栈顶操作符一直出栈，知道栈顶操作符小于等于该操作符。
+                        while(getOpsFlag(op) < getOpsFlag(stackCh.peek())) {
+                            Character firstOp = stackCh.pop();
+                            int num1 = stackNum.pop();
+                            int num2 = stackNum.pop();
+                            stackNum.push(getRes(num2, num1, firstOp));
+                        }
+                        stackCh.push(op); //该操作符入栈
+                    }
+                } else if(op == ')') { //若是 ），则栈顶操作符一直出栈，直到遇到 ( 为止
+                    while(stackCh.peek() != '(') {
+                        Character firstOp = stackCh.pop();
+                        int num1 = stackNum.pop();
+                        int num2 = stackNum.pop();
+                        stackNum.push(getRes(num2, num1, firstOp));
+                    }
+                    stackCh.pop(); // ( 出栈
+                }
+            }
+        }
+        while(!stackCh.isEmpty()) {
+            Character firstOp = stackCh.pop();
+            int num1 = stackNum.pop();
+            int num2 = stackNum.pop();
+            stackNum.push(getRes(num2, num1, firstOp));
+        }
+        return stackNum.pop();
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        String str = sc.next();
+        Main main = new Main();
+        main.str = str;
+        main.idx = 0;
+        int res = main.cal();
+        System.out.println(res);
+    }
+}
